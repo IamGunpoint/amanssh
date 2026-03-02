@@ -15,7 +15,7 @@ app.get("/", (_, res) => {
   res.send(`<!DOCTYPE html>
 <html>
 <head>
-<title>System Access</title>
+<title>SSH | BY AMAN</title>
 <style>
   body { margin:0; height:100vh; background:#0a0a0c; display:flex; align-items:center; justify-content:center; font-family: 'Inter', sans-serif; color:#fff; }
   .status-card { background:#111114; border:1px solid #27272a; padding:3rem; border-radius:12px; text-align:center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
@@ -28,7 +28,8 @@ app.get("/", (_, res) => {
   <div class="status-card">
     <div style="margin-bottom:1rem"><span class="dot"></span><span style="color:#22c55e; font-size:12px; font-weight:bold; text-transform:uppercase;">System Online</span></div>
     <h1>Secure Agent Gateway</h1>
-    <p>Waiting for incoming node connections...</p>
+    <br>
+<style>@import 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap';body{margin:0;height:100vh;background:#0a0a0c;display:flex;align-items:center;justify-content:center;font-family:Inter,sans-serif}a{padding:12px 24px;background:#111114;color:#3b82f6;text-decoration:none;border:1px solid #27272a;border-radius:8px;font-weight:600;font-size:14px;transition:all .2s ease;box-shadow:0 4px 12px rgba(0,0,0,.5)}a:hover{background:#1c1c1f;border-color:#3b82f6;color:#60a5fa;transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,.15)}</style><a href="https://github.com/IamGunpoint/ssh">Install System</a>
   </div>
 </body>
 </html>`)
@@ -41,7 +42,7 @@ app.get("/s/:id", (req, res) => {
   res.send(`<!DOCTYPE html>
 <html>
 <head>
-<title>Terminal | Cloud Shell</title>
+<title>Terminal | BY AMAN</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css">
 <style>
   body { margin:0; padding:0; height:100vh; background:#0a0a0c; overflow:hidden; display:flex; flex-direction:column; }
@@ -67,7 +68,7 @@ app.get("/s/:id", (req, res) => {
 
 <div class="toolbar">
   <div class="toolbar-left">
-    <div class="tab">root@remote-agent</div>
+    <div class="tab">BY AMAN</div>
     <div class="status-indicator"><div class="pulse"></div> SSH ACTIVE</div>
   </div>
   <div style="color:#3f3f46; font-size:11px; font-family:monospace;">AES-256-GCM</div>
