@@ -15,7 +15,7 @@ app.get("/", (_, res) => {
   res.send(`<!DOCTYPE html>
 <html>
 <head>
-<title>ssh</title>
+<title>ssh console</title>
 <style>
 html,body{
   margin:0;height:100%;
@@ -38,75 +38,134 @@ a:hover{text-decoration:underline}
 </head>
 <body>
 <div class="card">
-  <h1>ssh</h1>
-  <a href="https://github.com/IamGunpoint/ssh" target="_blank">
-    https://github.com/IamGunpoint/ssh
-  </a>
+  <h1>ssh remote console</h1>
+  <a href="#" target="_blank">Ready for connections</a>
 </div>
 </body>
 </html>`)
 })
 
-/* ================= TERMINAL ================= */
+/* ================= MINECRAFT-STYLE TERMINAL ================= */
 app.get("/s/:id", (req, res) => {
   if (!sessions.has(req.params.id)) return res.send("Invalid session")
 
   res.send(`<!DOCTYPE html>
 <html>
 <head>
-<title>ssh</title>
+<title>Server Console</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css">
 <style>
-html,body{margin:0;height:100%;background:#0b1020}
-.top{
-  height:52px;
-  background:#0b1020;
-  border-bottom:1px solid #1e293b;
-  display:flex;align-items:center;
-  padding:0 16px;color:#c7d2fe
-}
-.dot{width:12px;height:12px;border-radius:50%;margin-right:8px}
-.red{background:#ef4444}
-.yellow{background:#facc15}
-.green{background:#22c55e}
-#term{height:calc(100% - 52px)}
+  html, body { 
+    margin: 0; padding: 0; height: 100%; 
+    background: #000; font-family: 'Courier New', Courier, monospace;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  
+  /* Header */
+  .header {
+    background: #1a1a1a; color: #aaa;
+    padding: 10px 15px; font-size: 13px;
+    border-bottom: 2px solid #333;
+    display: flex; justify-content: space-between;
+  }
+
+  /* The Output Area */
+  #terminal-container { 
+    flex-grow: 1; 
+    padding: 10px;
+    background: #000;
+  }
+
+  /* The Minecraft Input Field */
+  .input-area {
+    background: #1a1a1a;
+    padding: 15px;
+    display: flex;
+    border-top: 2px solid #333;
+  }
+
+  .input-area span {
+    color: #55ff55; /* Minecraft Green */
+    margin-right: 10px;
+    font-weight: bold;
+    user-select: none;
+  }
+
+  #cmd-input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    flex-grow: 1;
+    font-family: inherit;
+    font-size: 16px;
+    outline: none;
+  }
 </style>
 </head>
 <body>
-<div class="top">
-  <div class="dot red"></div>
-  <div class="dot yellow"></div>
-  <div class="dot green"></div>
-  <span style="margin-left:10px">ssh — live terminal</span>
+
+<div class="header">
+  <span>SERVER_CONSOLE > REMOTE_AGENT</span>
+  <span>STATUS: <span style="color:#22c55e">ONLINE</span></span>
 </div>
-<div id="term"></div>
+
+<div id="terminal-container"></div>
+
+<div class="input-area">
+  <span>></span>
+  <input type="text" id="cmd-input" placeholder="Type a command..." autofocus autocomplete="off">
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
 <script>
-const term = new Terminal({
-  cursorBlink:true,
-  fontSize:14,
-  theme:{
-    background:"#0b1020",
-    foreground:"#e5e7eb",
-    cursor:"#a5b4fc",
-    selection:"#1e293b"
-  }
-})
+  const term = new Terminal({
+    cursorBlink: true,
+    fontSize: 15,
+    convertEol: true,
+    theme: {
+      background: "#000000",
+      foreground: "#ffffff"
+    }
+  });
 
-term.open(document.getElementById("term"))
-term.focus()
+  const container = document.getElementById("terminal-container");
+  const input = document.getElementById("cmd-input");
+  
+  term.open(container);
+  
+  // Connect WebSocket
+  const protocol = location.protocol === "https:" ? "wss://" : "ws://";
+  const ws = new WebSocket(protocol + location.host + "/session/${req.params.id}");
 
-window.addEventListener("click",()=>term.focus())
+  // Handle Incoming Data
+  ws.onmessage = (e) => {
+    // If it's a blob, we need to read it
+    if (e.data instanceof Blob) {
+        e.data.text().then(text => term.write(text));
+    } else {
+        term.write(e.data);
+    }
+  };
 
-const ws = new WebSocket(
-  (location.protocol==="https:"?"wss://":"ws://") +
-  location.host + "/session/${req.params.id}"
-)
+  ws.onclose = () => term.writeln("\\r\\n[SESSION CLOSED]");
 
-term.onData(d => ws.send(d))
-ws.onmessage = e => term.write(e.data)
-ws.onclose = () => term.writeln("\\r\\n[disconnected]")
+  // Handle Command Submission
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const cmd = input.value;
+      if (cmd.trim() !== "") {
+        // Optional: Show what you typed in the console like Minecraft
+        term.writeln("\\x1b[32m[User]\\x1b[0m " + cmd);
+        
+        // Send command to the agent
+        ws.send(cmd + "\\n");
+        input.value = "";
+      }
+    }
+  });
+
+  // Keep focus on input
+  window.addEventListener("click", () => input.focus());
 </script>
 </body>
 </html>`)
@@ -115,7 +174,7 @@ ws.onclose = () => term.writeln("\\r\\n[disconnected]")
 /* ================= SOCKETS ================= */
 wss.on("connection", (ws, req) => {
 
-  // VPS CLIENT
+  // AGENT (The VPS/Computer running the script)
   if (req.url === "/agent") {
     const id = crypto.randomBytes(6).toString("hex")
     sessions.set(id, { agent: ws, browser: null })
@@ -131,14 +190,18 @@ wss.on("connection", (ws, req) => {
     return
   }
 
-  // BROWSER
+  // BROWSER (The User viewing the console)
   if (req.url.startsWith("/session/")) {
     const id = req.url.split("/").pop()
     const s = sessions.get(id)
     if (!s) return ws.close()
 
     s.browser = ws
-    ws.on("message", d => s.agent.send(d))
+    ws.on("message", d => {
+        if (s.agent && s.agent.readyState === 1) {
+            s.agent.send(d);
+        }
+    })
     ws.on("close", () => { if (s) s.browser = null })
   }
 })
